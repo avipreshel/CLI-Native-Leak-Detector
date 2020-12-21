@@ -16,13 +16,13 @@ For example, if call stack A->B->C has allocated heap addresses 0x1 and 0x2, and
 So - 
 
 Each time A heap allocation event arrives, the app assign it to A call stack. Call stacks are uniquely identified by their address list. 
-Exaplained: ETW sends the call stack as a list of memory addresses, so, A call stack with call depth = 3 in an x64 process looks something like this [0x12e1161210121212,0x1a12b2121f121212,0xa21b1212ff121212]. 
-So, I decided to use SHA256 to generate A unique key. 
-The reason behind using SHA256 is:
+Exaplained: ETW sends the call stack as a list of memory addresses, so, A call stack with call depth = 3 in an x64 process looks something like this [0x12e1161210121212, 0x1a12b2121f121212, 0xa21b1212ff121212]. 
+In order to uniquly identify A call stack, I had to map this list of memory addresses to A key. The nai've solution would be to conert it to A long string list, but call stacks can get very long, so it was not very efficent to create A string based on that.
+So, I decided to use SHA256 to generate A unique key. The reason behind using SHA256 is:
 1) It creates a highly unique key, with practically zero collusion with other key
-2) It's got a fixed length. A call stack can be very long, so it was not very efficent to create A string based on that.
+2) It's got a fixed length
 
-I've used Base64 to convert the SHA256 key to a "comfortable" string key. The base64 is actually redundant, but it was easier to debug, since SHA256 creates A non-alphanumerical string.
+I've used Base64 to convert the SHA256 key to A "readable" string key. The base64 is actually redundant, but it was easier to debug, since SHA256 creates A non-alphanumerical string. Perhaps future releases can get rid of that, and make this app runs A tad faster.
 
 # Tech stack used in this app
 - C# w/ .Net 4.8
