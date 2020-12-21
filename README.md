@@ -1,5 +1,5 @@
 # Native (C++) Memory Leak Detection tool
-A useful tool for tracking native (C++) memory leakage in Windows 10 environment. The app support x86 and x64 in both Debug and Release modes.
+A useful tool, written in C#, for tracking native (C++) memory leakage in Windows 10 environment. The app support x86 and x64 in both Debug and Release modes.
 
 # How to use
 - Download the project and compile the solution with VS2019
