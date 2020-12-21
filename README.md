@@ -1,4 +1,4 @@
-# Native Memory Leak Detection
+# Native (C++) Memory Leak Detection tool
 A useful tool for tracking native (C++) memory leakage in Windows 10 environment. The app support x86 and x64 in both Debug and Release modes.
 
 # How to use
@@ -24,7 +24,7 @@ So, I decided to use SHA256 to generate A unique key. The reason behind using SH
 
 I've used Base64 to convert the SHA256 key to A "readable" string key. The base64 is actually redundant, but it was easier to debug, since SHA256 creates A non-alphanumerical string. Perhaps future releases can get rid of that, and make this app runs A tad faster.
 
-# Tech stack used in this app
+# Tech stack used
 - C# w/ .Net 4.8
 - Microsoft.Diagnostics.Tracing NuGet v4.3.0 (https://www.nuget.org/packages/System.Diagnostics.Tracing/4.3.0)
 - P/Invoke to DbgHelp.dll v10.0.18362.1139 . A local copy of this assembly is included in this project. This assembly is part of Windows 10, yet the most up-to-date version cam be obtained from the Windows 10 SDK: https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/. I have not tested this app with another version.
