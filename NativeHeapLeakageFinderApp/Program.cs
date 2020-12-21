@@ -81,8 +81,6 @@ namespace NativeHeapLeakageFinder
             return (handle, proc.Id);
         }
 
-        
-
         static void InitDbgHelp(int pid,IntPtr handle)
         {
             bool ans = NativeDbgHelp.SymInitialize(handle, null, true);
