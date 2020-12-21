@@ -1,2 +1,34 @@
-# NativeMemoryLeakDetection
-A useful tool for tracking native (C++) memory leakage in Windows 10 environment (support both x86 and x64)
+# Native Memory Leak Detection
+A useful tool for tracking native (C++) memory leakage in Windows 10 environment. The app support x86 and x64 in both Debug and Release modes.
+
+# How does it work
+This app is using ETW (Event Tracing for Windows, https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-portal) for listening to native (C++) memory allocation and de-allocation events coming from A given windows process.
+The main idea is to find *suspected call stacks*. A suspect call stack is A call stack which got at least one outstanding heap allocation.
+For example, if call stack A->B->C has allocated heap addresses 0x1 and 0x2, and address 0x2 was later freed, then A->B->C got 1 outstanding heap allocation (address 0x1).
+
+So - 
+
+Each time A heap allocation event arrives, the app assign it to A call stack. Call stacks are uniquely identified by their address list. 
+Exaplained: ETW sends the call stack as a list of memory addresses, so, A call stack with call depth = 3 in an x64 process looks something like this [0x12e1161210121212,0x1a12b2121f121212,0xa21b1212ff121212]. 
+So, I decided to use SHA256 to generate A unique key. 
+The reason behind using SHA256 is:
+1) It creates a highly unique key, with practically zero collusion with other key
+2) It's got a fixed length. A call stack can be very long, so it was not very efficent to create A string based on that.
+
+I've used Base64 to convert the SHA256 key to a "comfortable" string key. The base64 is actually redundant, but it was easier to debug, since SHA256 creates A non-alphanumerical string.
+
+# Tech stack used in this app
+- C# w/ .Net 4.8
+- Microsoft.Diagnostics.Tracing NuGet v4.3.0 (https://www.nuget.org/packages/System.Diagnostics.Tracing/4.3.0)
+- P/Invoke to DbgHelp.dll v10.0.18362.1139 . A local copy of this assembly is included in this project. This assembly is part of Windows 10, yet the most up-to-date version cam be obtained from the Windows 10 SDK: https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/. I have not tested this app with another version.
+- P/Invoke to kernel32.dll
+- MS Unit Test framework
+
+# How to use
+- Download the project and compile the solution with VS2019
+- The tracked app (the app you wish to put under inspection) should have it's PDBs in the same folder as it's .exe and .dlls, otherwise the call-stack will be empty strings, which isn't ideal.
+
+# ToDos
+- Command line options (specify which process or process ID to track...currently it's hard coded to "CPPConsole1.exe")
+- Basic UI (to select process, start / stop session, view suspected call stacks)
+- The TraceEvents are currently identified by their string EventName property ("Heap/Alloc", "Heap/Free"), but it can be more efficent to identify them by their opcode, which is an int. This can speed up this app by a bit.
