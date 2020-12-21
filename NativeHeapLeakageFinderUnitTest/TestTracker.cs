@@ -5,7 +5,7 @@ using System;
 namespace NativeHeapLeakageFinderUnitTest
 {
     [TestClass]
-    public class UnitTest1
+    public class TestTracker
     {
         [TestMethod]
         public void Test_Alloc_Stack_Dealloc()

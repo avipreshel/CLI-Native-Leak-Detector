@@ -48,6 +48,10 @@ namespace NativeHeapLeakageFinder
         }
     }
 
+    /// <summary>
+    /// A class that keep track of the allocations and de-allocations
+    /// This class is the heart of the memory allocator
+    /// </summary>
     public static class AllocationTracker
     {
         static Dictionary<string, AllocSpot> MapHashToAllotSpot { get; set; } = new Dictionary<string, AllocSpot>();
@@ -59,6 +63,7 @@ namespace NativeHeapLeakageFinder
         public static List<AllocSpot> Suspects => MapHashToAllotSpot.Values.ToList();
 
         static SHA256 SHA256Instance = SHA256.Create();
+        static ulong s_numOfAllocations = 0;
 
         static AllocationTracker()
         {
@@ -79,25 +84,28 @@ namespace NativeHeapLeakageFinder
 
         public static void OnAlloc(HeapAllocationEvent ev)
         {
+            s_numOfAllocations++;
             OutstandingAllocations.Add(ev.Address, ev);
             AllocEventIdToAllocEvent.Add(ev.AllocEventId, ev);
         }
 
         public static void OnDeAlloc(HeapDeAllocationEvent ev)
         {
-            // Console.WriteLine(ev);
             OutstandingDeallocations.Add(ev);
 
+            // We might be able to cleanup some allocation spots...
             HandleOutstandingEvents();
             CleanupHealthySpots();
         }
 
         public static void HandleOutstandingEvents()
         {
+            // Do we have any outstanding allocation events that are not treated yet?
             var outstandingAllocs = OutstandingAllocations.Keys.ToList();
             foreach (var allocAddress in outstandingAllocs)
             {
                 var allocEvent = OutstandingAllocations[allocAddress];
+                // try to find the allot spot object
                 if (MapHashToAllotSpot.TryGetValue(allocEvent.StackTraceHash, out AllocSpot allocSpot))
                 {
                     allocSpot.OutstandingAllocations.Add(allocAddress, allocEvent);
@@ -190,10 +198,7 @@ namespace NativeHeapLeakageFinder
 
         public static void Print()
         {
-            foreach (var allocSpot in MapHashToAllotSpot)
-            {
-                Console.WriteLine($"{allocSpot.Key} allocated {allocSpot.Value.AllocTimes} times with total {allocSpot.Value.OutstandingAllocations.Count} outstanding allocations");
-            }
+            Console.Write($"Total {s_numOfAllocations} allocations tracked so far. {MapHashToAllotSpot.Count} Suspected call stacks are tracked\r");
         }
     }
 

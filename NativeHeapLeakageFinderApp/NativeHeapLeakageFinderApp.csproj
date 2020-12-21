@@ -103,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AllocationTracker.cs" />
+    <Compile Include="ETWEventHandler.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="HelperClasses.cs" />
     <Compile Include="NativeDbgHelp.cs" />

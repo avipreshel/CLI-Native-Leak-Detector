@@ -27,8 +27,10 @@ namespace NativeHeapLeakageFinder
 
         public static SYMBOL_INFO Create()
         {
-            var symbol = new SYMBOL_INFO();
-            symbol.MaxNameLen = 1024;
+            var symbol = new SYMBOL_INFO
+            {
+                MaxNameLen = 1024
+            };
             symbol.SizeOfStruct = (uint)Marshal.SizeOf(symbol) - 1024;   // char buffer is not counted, the ANSI version of SymFromAddr is called so each character is 1 byte long
             return symbol;
         }
@@ -96,6 +98,9 @@ namespace NativeHeapLeakageFinder
         // read https://docs.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symbol_info
         [DllImport("dbghelp.dll", SetLastError = true, CharSet = CharSet.Ansi)]
         public static extern bool SymFromAddr(IntPtr hProcess, ulong address, out ulong displacement, ref SYMBOL_INFO symbol);
+
+        [DllImport("dbghelp.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+        public static extern bool SymGetSymFromAddr(IntPtr hProcess, uint address, out uint displacement, ref SYMBOL_INFO symbol);
 
         [DllImport("dbghelp.dll", SetLastError = true)]
         public static extern bool SymCleanup(IntPtr hProcess);
