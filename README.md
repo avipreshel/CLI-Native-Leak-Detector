@@ -1,7 +1,14 @@
 # Native Memory Leak Detection
 A useful tool for tracking native (C++) memory leakage in Windows 10 environment. The app support x86 and x64 in both Debug and Release modes.
 
-# How does it work
+# How to use
+- Download the project and compile the solution with VS2019
+- Preperations: The tracked app (the app you wish to put under inspection) should have it's PDBs in the same folder as it's .exe and .dlls, otherwise the call-stack will be empty strings, which isn't ideal.
+- How to run from command line: 
+  - Use process name: "NativeHeapLeakageFinder.exe -IncludeSystemSymbols:N -Process:MyApp.exe"  
+  - Use process id: "NativeHeapLeakageFinder.exe -IncludeSystemSymbols:N -Process:12345"  
+
+# How does it work, under the hood
 This app is using ETW (Event Tracing for Windows, https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-portal) for listening to native (C++) memory allocation and de-allocation events coming from A given windows process.
 The main idea is to find *suspected call stacks*. A suspect call stack is A call stack which got at least one outstanding heap allocation.
 For example, if call stack A->B->C has allocated heap addresses 0x1 and 0x2, and address 0x2 was later freed, then A->B->C got 1 outstanding heap allocation (address 0x1).
@@ -24,9 +31,9 @@ I've used Base64 to convert the SHA256 key to a "comfortable" string key. The ba
 - P/Invoke to kernel32.dll
 - MS Unit Test framework
 
-# How to use
-- Download the project and compile the solution with VS2019
-- The tracked app (the app you wish to put under inspection) should have it's PDBs in the same folder as it's .exe and .dlls, otherwise the call-stack will be empty strings, which isn't ideal.
+# Design decisions
+- As simple as possible. I originally aimed for a "one file app", but it got too messy. 
+- Testable. The main object (the tracker) has a fairly simple API which I was able to easily test using MS Test framework (spared me TONS of bugs...TEST! TEST! TEST!)
 
 # ToDos
 - Command line options (specify which process or process ID to track...currently it's hard coded to "CPPConsole1.exe")
