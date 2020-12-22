@@ -13,7 +13,7 @@ namespace NativeHeapLeakageFinder
         /// <summary>
         /// A set of familiar system symbols that we can hide from the user (in case user turns on this feature)
         /// </summary>
-        private static HashSet<string> SystemSymbols = new HashSet<string>()
+        private static readonly HashSet<string> KnownSystemSymbols = new HashSet<string>()
         {
             "__scrt_common_main_seh",
             "BaseThreadInitThunk",
@@ -65,10 +65,10 @@ namespace NativeHeapLeakageFinder
             return ( string.Empty,string.Empty,0); // unknown case
         }
 
-        public static void PrintReport(IntPtr handle,List<AllocSpot> suspects, Stopwatch elapsedTime, bool hideSystemStack)
+        public static void PrintReport(IntPtr handle,List<AllocSpot> suspects, Stopwatch elapsedTime, bool hideSystemStack, int topX)
         {
             int counter = 1;
-            foreach (var allocSpot in suspects.OrderByDescending(allocSpot => allocSpot.OutstandingAllocations.Count))
+            foreach (var allocSpot in suspects.OrderByDescending(allocSpot => allocSpot.OutstandingAllocations.Count).Take(topX))
             {
                 int outStandingAllocationCount = allocSpot.OutstandingAllocations.Count();
                 long outStandingAllocationBytes = allocSpot.OutstandingAllocations.Sum(item => (long)item.Value.ByteSize);
@@ -77,17 +77,17 @@ namespace NativeHeapLeakageFinder
                 Console.WriteLine($"Total leakage [Bytes]: {outStandingAllocationBytes:n0}");// =  [Bytes] per object");
                 float totalLeakMB = outStandingAllocationBytes / (1024f * 1024f);
                 Console.WriteLine($"Total leakage [MBytes]: {totalLeakMB:F2}");
-                Console.WriteLine($"Expected leakage [MBytes] per hour: {totalLeakMB / elapsedTime.Elapsed.TotalHours:F2}");
+                Console.WriteLine($"Estimated leakage over time [MBytes per hour]: {totalLeakMB / elapsedTime.Elapsed.TotalHours:F2}");
                 Console.WriteLine($"Unallocated instance count: {outStandingAllocationCount:n0}");
                 Console.WriteLine($"Leakage per instance [Bytes]: {outStandingAllocationBytes / outStandingAllocationCount}");
                 
                 Console.WriteLine("Call Stack:");
                 foreach (ulong address in allocSpot.StackTrace)
                 {
-                    var symbolInfo = HelperClasses.GetInfo(handle, address);
-                    bool isSystemSymbol = SystemSymbols.Any(item => symbolInfo.symbolName.Contains(item));
+                    var (symbolName, fileName, codeLine) = HelperClasses.GetInfo(handle, address);
+                    bool isSystemSymbol = KnownSystemSymbols.Any(item => symbolName.Contains(item));
 
-                    if (string.IsNullOrEmpty(symbolInfo.symbolName.Trim()))
+                    if (string.IsNullOrEmpty(symbolName.Trim()))
                         continue;
 
                     if (isSystemSymbol && hideSystemStack)
@@ -95,12 +95,12 @@ namespace NativeHeapLeakageFinder
                         continue;
                     }
 
-                    if (!symbolInfo.symbolName.Contains("::"))
+                    if (!symbolName.Contains("::"))
                     {
-                        symbolInfo.symbolName = $"::{symbolInfo.symbolName}"; // Add "::" prefix, so that user will know it's a method
+                        symbolName = $"::{symbolName}"; // Add "::" prefix, so that user will know it's a method
                     }
 
-                    Console.WriteLine($"{symbolInfo.symbolName},{symbolInfo.fileName} : Line {symbolInfo.codeLine}");
+                    Console.WriteLine($"{symbolName},{fileName} : Line {codeLine}");
                 }
                 counter++;
             }

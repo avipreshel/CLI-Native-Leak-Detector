@@ -10,9 +10,16 @@ using System.Threading.Tasks;
 
 namespace NativeHeapLeakageFinder
 {
+    static class ETWEventOpcodes
+    {
+        public const int CallStack = 32;
+        public const int Alloc = 33;
+        public const int DeAlloc = 36;
+    }
+
     class ETWEventHandler
     {
-        BlockingCollection<TraceEvent> s_eventQueue = new BlockingCollection<TraceEvent>();
+        readonly BlockingCollection<TraceEvent> s_eventQueue = new BlockingCollection<TraceEvent>();
         readonly int _pid;
 
         /// <summary>
@@ -53,9 +60,9 @@ namespace NativeHeapLeakageFinder
 
 
                         var eventItem = s_eventQueue.Take(cancelToken);
-                        switch (eventItem.EventName)
+                        switch ((int)(eventItem.Opcode))
                         {
-                            case "Heap/Alloc":
+                            case ETWEventOpcodes.Alloc:
                                 var allocEvent = new HeapAllocationEvent()
                                 {
                                     Address = (ulong)eventItem.PayloadByName("AllocAddress"),
@@ -64,14 +71,14 @@ namespace NativeHeapLeakageFinder
                                 };
                                 AllocationTracker.OnAlloc(allocEvent);
                                 break;
-                            case "Heap/Free":
+                            case ETWEventOpcodes.DeAlloc:
                                 var deAllocEvent = new HeapDeAllocationEvent()
                                 {
                                     Address = (ulong)eventItem.PayloadByName("FreeAddress")
                                 };
                                 AllocationTracker.OnDeAlloc(deAllocEvent);
                                 break;
-                            case "StackWalk/Stack":
+                            case ETWEventOpcodes.CallStack:
                                 var stackWalkEvent = eventItem as StackWalkStackTraceData;
 
                                 var stackEvent = new StackTrackEvent()

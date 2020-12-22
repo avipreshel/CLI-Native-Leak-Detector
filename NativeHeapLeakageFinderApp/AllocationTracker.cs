@@ -62,7 +62,7 @@ namespace NativeHeapLeakageFinder
 
         public static List<AllocSpot> Suspects => MapHashToAllotSpot.Values.ToList();
 
-        static SHA256 SHA256Instance = SHA256.Create();
+        static readonly SHA256 SHA256Instance = SHA256.Create();
         static ulong s_numOfAllocations = 0;
 
         static AllocationTracker()
@@ -118,7 +118,7 @@ namespace NativeHeapLeakageFinder
             {
                 foreach (var allocSpot in MapHashToAllotSpot)
                 {
-                    if (allocSpot.Value.OutstandingAllocations.TryGetValue(deallocEvent.Address, out HeapAllocationEvent allocEvent))
+                    if (allocSpot.Value.OutstandingAllocations.ContainsKey(deallocEvent.Address))
                     {
                         allocSpot.Value.OutstandingAllocations.Remove(deallocEvent.Address);
                         deadOnes.Add(deallocEvent);
@@ -169,8 +169,7 @@ namespace NativeHeapLeakageFinder
                 var callStackStr = ev.StackTrace.Select(item => item.ToString()).Aggregate((x, y) => $"{x},{y}");
                 var stackHashKey = Convert.ToBase64String(SHA256Instance.ComputeHash(Encoding.Default.GetBytes(callStackStr)));
                 OutstandingAllocations[allocEv.Address].StackTraceHash = stackHashKey; // Assign the stack hash key to the allocation object
-                AllocSpot allocSpot = null;
-                if (MapHashToAllotSpot.TryGetValue(stackHashKey, out allocSpot))
+                if (MapHashToAllotSpot.TryGetValue(stackHashKey, out AllocSpot allocSpot))
                 {
 
                 }
