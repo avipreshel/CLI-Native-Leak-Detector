@@ -23,7 +23,7 @@ namespace NativeHeapLeakageFinder
                 return;
             }
 
-            (IntPtr handle, int pid) = GetProcessHandles("CPPConsoleApp1");
+            (IntPtr handle, int pid) = GetProcessHandles(args.FirstOrDefault());
 
             (var processName, var topX, var hideSystemStack) = GetCommandLinePrms(args);
 
@@ -104,6 +104,11 @@ namespace NativeHeapLeakageFinder
 
         static (IntPtr handle, int pid) GetProcessHandles(string processName)
         {
+            if (string.IsNullOrEmpty(processName) || string.IsNullOrWhiteSpace(processName))
+            {
+                throw new Exception($"Process name is empty. Please run again with no command options to see help");
+            }
+
             var proc = Process.GetProcessesByName(processName).FirstOrDefault();
             if (proc == null)
             {
