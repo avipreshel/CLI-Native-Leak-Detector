@@ -65,11 +65,7 @@ namespace NativeHeapLeakageFinder
                                 {
                                     Address = (ulong)eventItem.PayloadByName("AllocAddress"),
                                     ByteSize = (ulong)eventItem.PayloadByName("AllocSize"),
-
-                                    // For some odd reason, this double value of TimeStampRelativeMSec is the key to identify a stack event in StackWalkStackTraceData
-                                    // Another important key is the thread ID, as two seperate threads might allocate memory on the same stack stack, at exactly the same time, so the TID is critical
-                                    // in order for us to get a unique key for this allocation, that we can later asociate to a call stack event (see below)
-                                    AllocEventId = $"{eventItem.ThreadID}_{eventItem.TimeStampRelativeMSec}" 
+                                    AllocEventId = $"{eventItem.ThreadID}_{eventItem.TimeStampRelativeMSec}" // For some odd reason, this double value is the key to identify a stack event in StackWalkStackTraceData
                                 };
                                 AllocationTracker.OnAlloc(allocEvent);
                                 break;
@@ -86,7 +82,7 @@ namespace NativeHeapLeakageFinder
                                 var stackEvent = new StackTrackEvent()
                                 {
                                     StackTrace = stackWalkEvent.GetAddressesExt(),
-                                    AllocEventId = $"{eventItem.ThreadID}_{eventItem.TimeStampRelativeMSec}"
+                                    AllocEventId = $"{eventItem.ThreadID}_{stackWalkEvent.EventTimeStampRelativeMSec}"
                                 };
                                 AllocationTracker.OnStackEvent(stackEvent);
                                 break;
