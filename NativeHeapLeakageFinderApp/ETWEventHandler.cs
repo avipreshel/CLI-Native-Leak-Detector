@@ -57,8 +57,6 @@ namespace NativeHeapLeakageFinder
                 {
                     try
                     {
-
-
                         var eventItem = s_eventQueue.Take(cancelToken);
                         switch ((int)(eventItem.Opcode))
                         {
@@ -67,7 +65,11 @@ namespace NativeHeapLeakageFinder
                                 {
                                     Address = (ulong)eventItem.PayloadByName("AllocAddress"),
                                     ByteSize = (ulong)eventItem.PayloadByName("AllocSize"),
-                                    AllocEventId = eventItem.TimeStampRelativeMSec.ToString() // For some odd reason, this double value is the key to identify a stack event in StackWalkStackTraceData
+
+                                    // For some odd reason, this double value of TimeStampRelativeMSec is the key to identify a stack event in StackWalkStackTraceData
+                                    // Another important key is the thread ID, as two seperate threads might allocate memory on the same stack stack, at exactly the same time, so the TID is critical
+                                    // in order for us to get a unique key for this allocation, that we can later asociate to a call stack event (see below)
+                                    AllocEventId = $"{eventItem.ThreadID}_{eventItem.TimeStampRelativeMSec}" 
                                 };
                                 AllocationTracker.OnAlloc(allocEvent);
                                 break;
@@ -84,7 +86,7 @@ namespace NativeHeapLeakageFinder
                                 var stackEvent = new StackTrackEvent()
                                 {
                                     StackTrace = stackWalkEvent.GetAddressesExt(),
-                                    AllocEventId = stackWalkEvent.EventTimeStampRelativeMSec.ToString()
+                                    AllocEventId = $"{eventItem.ThreadID}_{eventItem.TimeStampRelativeMSec}"
                                 };
                                 AllocationTracker.OnStackEvent(stackEvent);
                                 break;
