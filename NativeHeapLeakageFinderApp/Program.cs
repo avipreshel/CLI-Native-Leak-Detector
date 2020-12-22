@@ -109,6 +109,8 @@ namespace NativeHeapLeakageFinder
                 throw new Exception($"Process name is empty. Please run again with no command options to see help");
             }
 
+            processName = processName.Replace(".exe", string.Empty);
+
             var proc = Process.GetProcessesByName(processName).FirstOrDefault();
             if (proc == null)
             {
