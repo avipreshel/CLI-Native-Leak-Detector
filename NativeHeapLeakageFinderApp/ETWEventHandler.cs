@@ -92,8 +92,10 @@ namespace NativeHeapLeakageFinder
 
                         AllocationTracker.Print();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        Console.WriteLine($"Exception caught on ETWEventHandler event queue {ex.Message}");
+                        Console.WriteLine($"Exception caught on ETWEventHandler event queue {ex.StackTrace}");
                         break;
                     }
                 } while (!cancelToken.IsCancellationRequested);
