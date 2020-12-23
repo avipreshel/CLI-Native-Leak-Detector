@@ -5,9 +5,11 @@ A useful tool, written in C#, for tracking native (C++) memory leakage in Window
 - Download the project and compile the solution with VS2019
 - Preperations: The tracked app (the app you wish to put under inspection) should have it's PDBs in the same folder as it's .exe and .dlls, otherwise the call-stack will be empty strings, which isn't ideal.
 - How to run from command line: 
-  - Use process name: "NativeHeapLeakageFinder.exe -IncludeSystemSymbols:N -Process:MyApp.exe"  
-  - Use process id: "NativeHeapLeakageFinder.exe -IncludeSystemSymbols:N -Process:12345"  
-
+  - Use process name: "NativeHeapLeakageFinder.exe SuspectedApp.exe -top:10 -hidesystemstack -ignoresingleallocs
+  - top:10 will show only the top 10 results. Results are sorted according to the total amount of unallocated memory, which is the number of instances X bytes per instance
+  - hidesystemstack will not show any "system" symbols in the call stack. This is to make the report more neat, as we usually don't care about system call stack
+  - ignoresingleallocs this will ignore any single allocations, such as singeltons or other one-time caching which is done in the app lifecycle
+ 
 # How does it work, under the hood
 This app is using ETW (Event Tracing for Windows, https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-portal) for listening to native (C++) memory allocation and de-allocation events coming from A given windows process.
 The main idea is to find *suspected call stacks*. A suspect call stack is A call stack which got at least one outstanding heap allocation.
@@ -36,6 +38,4 @@ I've used Base64 to convert the SHA256 key to A "readable" string key. The base6
 - Testable. The main object (the tracker) has a fairly simple API which I was able to easily test using MS Test framework (spared me TONS of bugs...TEST! TEST! TEST!)
 
 # ToDos
-- Command line options (specify which process or process ID to track...currently it's hard coded to "CPPConsole1.exe")
 - Basic UI (to select process, start / stop session, view suspected call stacks)
-- The TraceEvents are currently identified by their string EventName property ("Heap/Alloc", "Heap/Free"), but it can be more efficent to identify them by their opcode, which is an int. This can speed up this app by a bit.
