@@ -25,7 +25,7 @@ namespace NativeHeapLeakageFinder
 
             (IntPtr handle, int pid) = GetProcessHandles(args.FirstOrDefault());
 
-            (var processName, var topX, var hideSystemStack) = GetCommandLinePrms(args);
+            (var processName, var topX, var hideSystemStack,bool ignoreSingleAllocs) = GetCommandLinePrms(args);
 
             CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -72,20 +72,18 @@ namespace NativeHeapLeakageFinder
             watch.Stop();
             Console.WriteLine($"End of ETW session: {sessionName}");
 
-            HelperClasses.PrintReport(handle, AllocationTracker.Suspects, watch, hideSystemStack, topX);
+            HelperClasses.PrintReport(handle, AllocationTracker.Suspects, watch, hideSystemStack, topX, ignoreSingleAllocs);
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
 
-        static (string processName, int topX, bool hideSystemStack) GetCommandLinePrms(string[] args)
+        static (string processName, int topX, bool hideSystemStack,bool ignoreSingleAllocs) GetCommandLinePrms(string[] args)
         {
             string processName = args[0].Replace(".exe", string.Empty);
 
             (IntPtr handle, int pid) = GetProcessHandles(processName);
 
             HashSet<string> options = new HashSet<string>(args.Skip(1).Select(item => item.ToLower()));
-
-            bool hideSystemStack = options.Contains("-hidesystemstack");
 
             int topX = int.MaxValue;
             string topXStr = string.Empty;
@@ -99,7 +97,8 @@ namespace NativeHeapLeakageFinder
                 throw new Exception($"{topXStr} contains a non-int value [{topXStr.Split(':')[1]}]");
             }
 
-            return (processName, topX, hideSystemStack);
+            
+            return (processName, topX, hideSystemStack : options.Contains("-hidesystemstack"), ignoreSingleAllocs : options.Contains("-ignoresingleallocs"));
         }
 
         static (IntPtr handle, int pid) GetProcessHandles(string processName)

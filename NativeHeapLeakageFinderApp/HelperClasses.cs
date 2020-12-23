@@ -39,7 +39,11 @@ namespace NativeHeapLeakageFinder
             "STD::",
             "std::",
             "SysAllocString",
-            "SysAllocStringLen"
+            "SysAllocStringLen",
+            "C2VectParallel",
+            "omp_get_wtick",
+            "vcomp_fork",
+            "vcomp_atomic_div_r8"
         };
 
         static (string symbolName,string fileName,uint codeLine) GetInfo(IntPtr handle, ulong address)
@@ -65,10 +69,20 @@ namespace NativeHeapLeakageFinder
             return ( string.Empty,string.Empty,0); // unknown case
         }
 
-        public static void PrintReport(IntPtr handle,List<AllocSpot> suspects, Stopwatch elapsedTime, bool hideSystemStack, int topX)
+        public static void PrintReport(IntPtr handle,List<AllocSpot> suspects, Stopwatch elapsedTime, bool hideSystemStack, int topX, bool ignoreSingleAllocs)
         {
             int counter = 1;
-            foreach (var allocSpot in suspects.OrderByDescending(allocSpot => allocSpot.OutstandingAllocations.Count).Take(topX))
+
+            suspects = suspects.OrderByDescending(allocSpot => allocSpot.OutstandingAllocations.Count).ToList();
+
+            if (ignoreSingleAllocs)
+            {
+                suspects = suspects.Where(item => item.OutstandingAllocations.Count > 1).ToList();
+            }
+
+            suspects = suspects.Take(topX).ToList();
+
+            foreach (var allocSpot in suspects)
             {
                 int outStandingAllocationCount = allocSpot.OutstandingAllocations.Count();
                 long outStandingAllocationBytes = allocSpot.OutstandingAllocations.Sum(item => (long)item.Value.ByteSize);
