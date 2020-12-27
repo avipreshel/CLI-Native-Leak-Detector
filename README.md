@@ -18,7 +18,11 @@ For example, if call stack A->B->C has allocated heap addresses 0x1 and 0x2, and
 So - 
 
 Each time A heap allocation event arrives, the app assign it to A call stack. Call stacks are uniquely identified by their address list. 
-Exaplained: ETW sends the call stack as a list of memory addresses, so, A call stack with call depth = 3 in an x64 process looks something like this [0x12e1161210121212, 0x1a12b2121f121212, 0xa21b1212ff121212]. 
+Exaplained: ETW sends the call stack as a list of memory addresses, so, A call stack with call depth = 3 in an x64 process looks something like this:
+
+```sh
+[0x12e1161210121212, 0x1a12b2121f121212, 0xa21b1212ff121212]. 
+```
 In order to uniquly identify A call stack, I had to map this list of memory addresses to A key. The nai've solution would be to convert it to A long string list, but call stacks can get very long, so it was not very efficent to create A string based on that.
 So, I decided to use SHA256 to generate A unique key. The reason behind using SHA256 is:
 1) It creates a highly unique key, with practically zero collusion with other key
