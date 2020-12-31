@@ -12,6 +12,8 @@ A useful tool, written in C#, for tracking native (C++) memory leakage in Window
 - When you are done, press any key in order to generate the report output
 - Press any key again to exit
  
+ ![Alt text](/Screenshot.jpg?raw=true "Report example")
+ 
 # How does it work, under the hood
 This app is using ETW (Event Tracing for Windows, https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-portal) for listening to native (C++) memory allocation and de-allocation events coming from A given windows process.
 The main idea is to find *suspected call stacks*. A suspect call stack is A call stack which got at least one outstanding heap allocation.
