@@ -9,6 +9,8 @@ A useful tool, written in C#, for tracking native (C++) memory leakage in Window
   - top:10 will show only the top 10 results. Results are sorted according to the total amount of unallocated memory, which is the number of instances X bytes per instance
   - hidesystemstack will not show any "system" symbols in the call stack. This is to make the report more neat, as we usually don't care about system call stack
   - ignoresingleallocs this will ignore any single allocations, such as singeltons or other one-time caching which is done in the app lifecycle
+- When you are done, press any key in order to generate the report output
+- Press any key again to exit
  
 # How does it work, under the hood
 This app is using ETW (Event Tracing for Windows, https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-portal) for listening to native (C++) memory allocation and de-allocation events coming from A given windows process.
