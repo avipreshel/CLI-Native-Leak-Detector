@@ -41,10 +41,6 @@ I've used Base64 to convert the SHA256 key to A "readable" string key. The base6
 - P/Invoke to kernel32.dll
 - MS Unit Test framework
 
-# Design decisions
-- As simple as possible. I originally aimed for a "one file app", but it got too messy. 
-- Testable. The main object (the tracker) has a fairly simple API which is easily testable using MS Test framework.
-
 # ToDos
 - Basic UI (to select process, start / stop session, view suspected call stacks)
 - Add unit test for the ETW tracker class
